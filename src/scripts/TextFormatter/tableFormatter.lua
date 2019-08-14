@@ -171,7 +171,7 @@ end
 function demonnic.TableMaker:createRowDivider()
   local columnPieces = {}
   for _,v in ipairs(self.columns) do
-    local piece = string.rep(self.rowSeparator, v.options.width)
+    local piece = string.format("%s%s%s", self.separatorColor, string.rep(self.rowSeparator, v.options.width), self.colorReset)
     table.insert(columnPieces, piece)
   end
   local ec = self.frameColor .. self.edgeCharacter .. self.colorReset

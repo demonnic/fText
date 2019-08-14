@@ -89,7 +89,15 @@ function demonnic:fixFormatOptions(str, opts)
   options.rightPadLen = options.leftPadLen + ((options.width - options.strLen)%2)
   options.maxPad = 0
   options.capLen = string.len(options.cap)
-  options.effWidth = options.width - ((options.capLen * 2) + 2)
+  local gapSpaces = 0
+  if not options.nogap then
+    if options.alignment == "center" then 
+      gapSpaces = 2 
+    else 
+      gapSpaces = 1 
+    end
+  end
+  options.effWidth = options.width - ((options.capLen * 2) + gapSpaces)
   if options.capLen > options.leftPadLen then
     options.cap = options.cap:sub(1, leftPadLen)
     options.capLen = string.len(options.cap)
