@@ -42,6 +42,14 @@ function demonnic.TableMaker:addColumn(options, position)
   self:insert(self.columns, position, formatter)
 end
 
+function demonnic.TableMaker:deleteColumn(position)
+  if position == nil then error("demonnic.TableMaker:deleteColumn(position): Argument Error: position as number expected, got nil") end
+  position = self:checkPosition(position)
+  local maxColumn = #self.columns
+  if position > maxColumn then error("demonnic.TableMaker:deleteColumn(position): Argument Error: position provided was larger than number of columns in the table. Number of columns: " .. #self.columns) end
+  table.remove(self.columns, position)
+end
+
 function demonnic.TableMaker:replaceColumn(options, position)
   if position == nil then
     error("demonnic.TableMaker:replaceColumn(options, position): Argument error: position as number expected, got nil")
@@ -61,12 +69,25 @@ function demonnic.TableMaker:addRow(columnEntries, position)
     error("demonnic.TableMaker:addRow(columnEntries, position): Argument error, columnEntries expected as table, got " .. columnEntriesType)
   end
   for _,entry in ipairs(columnEntries) do
-    if type(entry) ~= string then
-      if not tostring(entry) then error("demonnic.TableMaker:addRow(columnEntries, position): Argument error, columnEntries items expected as string, got:" .. type(entry)) end
+    local entryCheck = self:checkEntry(entry)
+    if entryCheck == 0 then
+      if type(entry) == "function" then
+        error("demonnic.TableMaker:addRow(columnEntries, position): Argument Error, you provided a function for a columnEntry but it does not return a string. We need a string. It was entry number " .. _ .. "in columnEntries")
+      else
+        error("demonnic.TableMaker:addRow(columnEntries, position): Argument error, columnEntries items expected as string, got:" .. type(entry)) 
+      end
     end
   end
   position = self:checkPosition(position, "demonnic.TableMaker:addRow(columnEntries, position)")
   self:insert(self.rows, position, columnEntries)
+end
+
+function demonnic.TableMaker:deleteRow(position)
+  if position == nil then error("demonnic.TableMaker:deleteRow(position): Argument Error: position as number expected, got nil") end
+  position = self:checkPosition(position, "demonnic.TableMaker:deleteRow(position)")
+  local maxRow = #self.rows
+  if position > maxRow then error("demonnic.TableMaker:deleteRow(position): Argument Error: position given was > the number of rows we have # of rows is:" .. maxRow) end
+  table.remove(self.rows, position)
 end
 
 function demonnic.TableMaker:replaceRow(columnEntries, position)
@@ -78,11 +99,56 @@ function demonnic.TableMaker:replaceRow(columnEntries, position)
     error("demonnic.TableMaker:replaceRow(columnEntries, position): position cannot be greater than the number of rows already in the tablemaker. You provided: " .. position .. " and there are " .. #self.rows .. "rows in the TableMaker")
   end
   for _,entry in ipairs(columnEntries) do
-    if type(entry) ~= string then
-      if not tostring(entry) then error("demonnic.TableMaker:replaceRow(columnEntries, position): Argument error, columnEntries items expected as string, got:" .. type(entry)) end
+    local entryCheck = self:checkEntry(entry)
+    if entryCheck == 0 then
+      if type(entry) == "function" then
+        error("demonnic.TableMaker:replaceRow(columnEntries, position): Argument Error: you provided a function for a columnEntry but it does not return a string. We need a string. It was entry number " .. _ .. "in columnEntries")
+      else
+        error("demonnic.TableMaker:replaceRow(columnEntries, position): Argument error: columnEntries items expected as string, got:" .. type(entry))
+      end
     end
   end
   self.rows[position] = columnEntries
+end
+
+function demonnic.TableMaker:checkEntry(entry)
+  if type(entry) ~= "string" then
+    if type(entry) == "function" then
+      local entryReturn = entry()
+      if type(entryReturn) ~= string and not tostring(entryReturn) then entry = 0 end
+    elseif not tostring(entry) then
+      entry = 0
+    end
+  end
+  return entry
+end
+
+function demonnic.TableMaker:checkNumber(num)
+  if num == nil then num = 0 end
+  if not tonumber(num) then num = 0 end
+  return tonumber(num)
+end
+
+function demonnic.TableMaker:setCell(row, column, entry)
+  local maxRow = #self.rows
+  local maxColumn = #self.columns
+  local ae = "demonnic.TableMaker:setCell(row, column, entry): Argument Error:"
+  row = self:checkNumber(row)
+  if row == 0 then error(ae .. " row must be a number, you provided " .. type(row)) end
+  column = self:checkNumber(column)
+  if column == 0 then error(ae .. " column must be a number, you provided " .. type(column)) end
+  if row > maxRow then error(ae .. " row is higher than the number of rows in the table. Highest row:" .. maxRow) end
+  if column > maxColumn then error(ae .. " column is higher than the number of columns in the table. Highest column:" .. maxColumn) end
+  local entryType = type(entry)
+  entry = self:checkEntry(entry)
+  if entry == 0 then
+    if type(entry) == "function" then 
+      error(ae .. " entry was provided as a function, but does not return a string. We need a string in the end")
+    else 
+      error("demonnic.TableMaker:setCell(row, column, entry): Argument Error: entry must be a string, or a function which returns a string. You provided a " .. entryType)
+    end
+  end
+  self.rows[row][column] = entry
 end
 
 function demonnic.TableMaker:totalWidth()
@@ -117,6 +183,7 @@ function demonnic.TableMaker:scanRow(rowToScan)
   for index,formatter in ipairs(self.columns) do
     local str = row[index]
     local column = ""
+    if type(str) == "function" then str = str() end
     column = formatter:format(str)
     table.insert(columns, column:split("\n"))
   end

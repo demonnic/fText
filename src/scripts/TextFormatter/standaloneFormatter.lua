@@ -81,7 +81,7 @@ function demonnic:fixFormatOptions(str, opts)
     options.colorPattern = ""
   end
   options.originalString = str
-  options.strippedString = str:gsub(options.colorPattern, "")
+  options.strippedString = string.gsub(tostring(str), options.colorPattern, "")
   options.strLen = string.len(options.strippedString)
   options.leftCap = options.cap
 	options.rightCap = options.cap
