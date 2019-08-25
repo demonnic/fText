@@ -453,9 +453,6 @@ function demonnic.TableMaker:new(options)
   local options = table.deepcopy(options)
   if options.allowPopups == true then
     options.autoEcho = true
-    if not options.autoEchoConsole then
-      error(funcName.. ": allowPopups is set, but autoEchoConsole is not. Because popups have to be sent immediately I have to have a console to send to before you can allowPopups.")
-    end
   else
     options.allowPopups = false
   end
