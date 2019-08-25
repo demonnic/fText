@@ -1,3 +1,5 @@
+--- Stand alone text formatter object
+-- @module demonnic.textFormatter
 demonnic.TextFormatter = {}
 demonnic.TextFormatter.validFormatTypes = { 'd', 'dec', 'decimal', 'h', 'hex', 'hexidecimal', 'c', 'color', 'colour', 'col', 'name'}
 

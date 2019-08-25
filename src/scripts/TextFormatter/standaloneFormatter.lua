@@ -1,5 +1,6 @@
+--- fText processing
+-- @module demonnic
 demonnic = demonnic or {}
-demonnic.text = {}
 
 function demonnic:wordWrap(str, limit, indent, indent1)
   -- pulled from http://lua-users.org/wiki/StringRecipes
