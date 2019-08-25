@@ -359,12 +359,8 @@ function demonnic.TableMaker:createRowDivider()
 end
 
 function demonnic.TableMaker:enablePopups()
-  local funcName = "demonnic.TableMaker:enablePopups()"
-  if not self.autoEchoConsole then
-    error(funcName .. ": Cannot enable popups when autoEchoConsole is not set. please run :setAutoEchoConsole(console) before enabling popups")
-  else
-    self.allowPopups = true
-  end
+  self.autoEcho = true
+  self.allowPopups = true
 end
 
 function demonnic.TableMaker:enableAutoEcho()
@@ -372,7 +368,19 @@ function demonnic.TableMaker:enableAutoEcho()
 end
 
 function demonnic.TableMaker:disableAutoEcho()
-  self.autoEcho = false
+  if self.allowPopups then
+    error("demonnic.TableMaker:disableAutoEcho(): you cannot disable autoEcho once you have enabled popups.")
+  else
+    self.autoEcho = false
+  end
+end
+
+function demonnic.TableMaker:enableAutoClear()
+  self.autoClear = true
+end
+
+function demonnic.TableMaker:disableAutoClear()
+  self.autoClear = false
 end
 
 function demonnic.TableMaker:setAutoEchoConsole(console)
