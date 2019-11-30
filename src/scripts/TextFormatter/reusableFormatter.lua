@@ -1,9 +1,10 @@
---- Stand alone text formatter object
+--- Stand alone text formatter object. Remembers the options you set and can be adjusted as needed
 -- @module demonnic.textFormatter
 demonnic.TextFormatter = {}
 demonnic.TextFormatter.validFormatTypes = { 'd', 'dec', 'decimal', 'h', 'hex', 'hexidecimal', 'c', 'color', 'colour', 'col', 'name'}
 
-
+--- Set's the formatting type whether it's for cecho, decho, or hecho
+--@tparam string typeToSet What type of formatter is this? Valid options are { 'd', 'dec', 'decimal', 'h', 'hex', 'hexidecimal', 'c', 'color', 'colour', 'col', 'name'}
 function demonnic.TextFormatter:setType(typeToSet)
   local isNotValid = not table.contains(self.validFormatTypes, typeToSet)
   if isNotValid then
@@ -36,6 +37,8 @@ function demonnic.TextFormatter:checkString(str)
   return str
 end
 
+--- Sets whether or not we should do word wrapping.
+--@tparam boolean shouldWrap should we do wordwrapping?
 function demonnic.TextFormatter:setWrap(shouldWrap)
   local argumentType = type(shouldWrap)
   shouldWrap = self:toBoolean(shouldWrap)
@@ -45,6 +48,8 @@ function demonnic.TextFormatter:setWrap(shouldWrap)
   self.options.wrap = shouldWrap
 end
 
+--- Sets the width we should format for
+--@tparam number width the width we should format for
 function demonnic.TextFormatter:setWidth(width)
   if type(width) ~= "number" then
     if tonumber(width) then
@@ -56,6 +61,8 @@ function demonnic.TextFormatter:setWidth(width)
   self.options.width = width
 end
 
+--- Sets the cap for the formatter
+--@tparam string cap the string to use for capping the formatted string.
 function demonnic.TextFormatter:setCap(cap)
   local argumentType = type(cap)
   local cap = self:checkString(cap)
@@ -63,6 +70,8 @@ function demonnic.TextFormatter:setCap(cap)
   self.options.cap = cap
 end
 
+--- Sets the color for the format cap
+--@tparam string capColor Color which can be formatted via Geyser.Color.parse()
 function demonnic.TextFormatter:setCapColor(capColor)
   local argumentType = type(capColor)
   local capColor = self:checkString(capColor)
@@ -70,6 +79,8 @@ function demonnic.TextFormatter:setCapColor(capColor)
   self.options.capColor = capColor
 end
 
+--- Sets the color for spacing character
+--@tparam string spacerColor Color which can be formatted via Geyser.Color.parse()
 function demonnic.TextFormatter:setSpacerColor(spacerColor)
   local argumentType = type(spacerColor)
   local spacerColor = self:checkString(spacerColor)
@@ -77,6 +88,8 @@ function demonnic.TextFormatter:setSpacerColor(spacerColor)
   self.options.spacerColor = spacerColor
 end
 
+--- Sets the color for formatted text
+--@tparam string textColor Color which can be formatted via Geyser.Color.parse()
 function demonnic.TextFormatter:setTextColor(textColor)
   local argumentType = type(textColor)
   local textColor = self:checkString(textColor)
@@ -84,6 +97,8 @@ function demonnic.TextFormatter:setTextColor(textColor)
   self.options.textColor = textColor
 end
 
+--- Sets the spacing character to use. Should be a single character
+--@tparam string spacer the character to use for spacing
 function demonnic.TextFormatter:setSpacer(spacer)
   local argumentType = type(spacer)
   local spacer = self:checkString(spacer)
@@ -91,6 +106,8 @@ function demonnic.TextFormatter:setSpacer(spacer)
   self.options.spacer = spacer
 end
 
+--- Set the alignment to format for
+--@tparam string alignment How to align the formatted string. Valid options are 'left', 'right', or 'center'
 function demonnic.TextFormatter:setAlignment(alignment)
   local validAlignments = {
     "left",
@@ -103,6 +120,8 @@ function demonnic.TextFormatter:setAlignment(alignment)
   self.options.alignment = alignment
 end
 
+--- Set whether the the spacer should go inside the the cap or outside of it
+--@tparam boolean spacerInside 
 function demonnic.TextFormatter:setInside(spacerInside)
   local argumentType = type(spacerInside)
   spacerInside = self:toBoolean(spacerInside)
@@ -112,6 +131,8 @@ function demonnic.TextFormatter:setInside(spacerInside)
   self.options.inside = spacerInside
 end
 
+--- Set whether we should mirror/reverse the caps. IE << becomes >> if set to true
+--@tparam boolean shouldMirror
 function demonnic.TextFormatter:setMirror(shouldMirror)
   local argumentType = type(shouldMirror)
   shouldMirror = self:toBoolean(shouldMirror)
@@ -121,10 +142,14 @@ function demonnic.TextFormatter:setMirror(shouldMirror)
   self.options.mirror = shouldMirror
 end
 
+--- Format a string based on the stored options
+--@tparam string str The string to format
 function demonnic.TextFormatter:format(str)
   return demonnic:fText(str, self.options)
 end
 
+--- Creates and returns a new TextFormatter. For valid options, please see https://github.com/demonnic/fText/wiki/fText
+--@tparam table options the options for the text formatter to use when running format()
 function demonnic.TextFormatter:new(options)
   if options == nil then options = {} end
   if options and type(options) ~= "table" then

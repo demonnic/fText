@@ -33,6 +33,9 @@ function demonnic.TableMaker:insert(tbl, pos, item)
   end
 end
 
+--- Adds a column definition for the table. 
+--@tparam table options Table of options suitable for a TextFormatter object. See https://github.com/demonnic/fText/wiki/fText
+--@tparam number position The position of the column you're adding, counting from the left. If not provided will add it as the last column
 function demonnic.TableMaker:addColumn(options, position)
   if options == nil then options = {} end
   if not type(options) == "table" then error("demonnic.TableMaker:addColumn(options, position): Argument error: options expected as table, got " .. type(options)) end
@@ -44,6 +47,8 @@ function demonnic.TableMaker:addColumn(options, position)
   self:insert(self.columns, position, formatter)
 end
 
+--- Deletes a column at the given position
+--@tparam number position the column you wish to delete
 function demonnic.TableMaker:deleteColumn(position)
   if position == nil then error("demonnic.TableMaker:deleteColumn(position): Argument Error: position as number expected, got nil") end
   position = self:checkPosition(position)
@@ -52,6 +57,9 @@ function demonnic.TableMaker:deleteColumn(position)
   table.remove(self.columns, position)
 end
 
+--- Replaces a column at a specific position with the newly provided formatting
+--@tparam table options table of options suitable for a TextFormatter object. See https://github.com/demonnic/fText/wiki/fText
+--@tparam number position which column you are replacing, counting from the left.
 function demonnic.TableMaker:replaceColumn(options, position)
   if position == nil then
     error("demonnic.TableMaker:replaceColumn(options, position): Argument error: position as number expected, got nil")
@@ -65,6 +73,9 @@ function demonnic.TableMaker:replaceColumn(options, position)
   self.columns[position] = formatter
 end
 
+--- Adds a row of output to the table
+--@tparam table columnEntries This indexed table contains an entry for each column in the table. Entries in the table must be strings, a table of options for insertPopup or insertLink, or a function which returns one of these things
+--@tparam number position position for the row you want to add, counting from the top down. If not provided defaults to the last line in the table.
 function demonnic.TableMaker:addRow(columnEntries, position)
   local columnEntriesType = type(columnEntries)
   if columnEntriesType ~= "table" then
@@ -84,6 +95,8 @@ function demonnic.TableMaker:addRow(columnEntries, position)
   self:insert(self.rows, position, columnEntries)
 end
 
+--- Deletes the row at the given position
+--@tparam number position the row to delete
 function demonnic.TableMaker:deleteRow(position)
   if position == nil then error("demonnic.TableMaker:deleteRow(position): Argument Error: position as number expected, got nil") end
   position = self:checkPosition(position, "demonnic.TableMaker:deleteRow(position)")
@@ -92,6 +105,9 @@ function demonnic.TableMaker:deleteRow(position)
   table.remove(self.rows, position)
 end
 
+--- Replaces a row of output in the table
+--@tparam table columnEntries This indexed table contains an entry for each column in the table. Entries in the table must be strings, a table of options for insertPopup or insertLink, or a function which returns one of these things
+--@tparam number position position for the row you want to add, counting from the top down.
 function demonnic.TableMaker:replaceRow(columnEntries, position)
   if position == nil then
     error("demonnic.TableMaker:replaceRow(columnEntries, position): ArgumentError: position expected as number, received nil")
@@ -114,27 +130,20 @@ function demonnic.TableMaker:replaceRow(columnEntries, position)
 end
 
 function demonnic.TableMaker:checkEntry(entry)
+  local allowedTypes = {
+    "string"
+  }
   if self.allowPopups then
-    local entryType = type(entry)
-    if entryType == "function" then
-      local entryReturnType = type(entry())
-      if entryReturnType ~= "string" and entryReturnType ~= "table" then
-        entry = 0
-      end
-    elseif entryType ~= "string" and entryType ~= "table" then
-      entry = 0
-    end
+    table.insert(allowedTypes, "table")
+  end
+  local entryType = type(entry)
+  if entryType == "function" then
+    entryType = type(entry())
+  end
+  if table.contains(allowedTypes, entryType) then
     return entry
   else
-    if type(entry) ~= "string" then
-      if type(entry) == "function" then
-        local entryReturn = entry()
-        if type(entryReturn) ~= "string" and not tostring(entryReturn) then entry = 0 end
-      elseif not tostring(entry) then
-        entry = 0
-      end
-    end
-    return entry
+    return 0
   end
 end
 
@@ -144,6 +153,10 @@ function demonnic.TableMaker:checkNumber(num)
   return tonumber(num)
 end
 
+--- Sets a specific cell's display information
+--@tparam number row the row number of the cell, counted from the top down
+--@tparam number column the column number of the cell, counted from the left
+--@param entry What to set the entry to. Must be a string, or a table of options for insertLink/insertPopup if allowPopups is set. Or a function which returns one of these things
 function demonnic.TableMaker:setCell(row, column, entry)
   local maxRow = #self.rows
   local maxColumn = #self.columns
@@ -358,15 +371,18 @@ function demonnic.TableMaker:createRowDivider()
   return string.format("%s%s%s", ec, table.concat(columnPieces, sep), ec)
 end
 
+--- enables making cells which incorporate insertLink/insertPopup
 function demonnic.TableMaker:enablePopups()
   self.autoEcho = true
   self.allowPopups = true
 end
 
+--- enables autoEcho so that when assemble is called it echos automatically
 function demonnic.TableMaker:enableAutoEcho()
   self.autoEcho = true
 end
 
+--- disables autoecho. Cannot be used if allowPopups is set
 function demonnic.TableMaker:disableAutoEcho()
   if self.allowPopups then
     error("demonnic.TableMaker:disableAutoEcho(): you cannot disable autoEcho once you have enabled popups.")
@@ -375,14 +391,18 @@ function demonnic.TableMaker:disableAutoEcho()
   end
 end
 
+--- Enables automatically clearing the miniconsole we echo to
 function demonnic.TableMaker:enableAutoClear()
   self.autoClear = true
 end
 
+--- Disables automatically clearing the miniconsole we echo to
 function demonnic.TableMaker:disableAutoClear()
   self.autoClear = false
 end
 
+--- Set the miniconsole to echo to
+--@param console The miniconsole to autoecho to. Set to "main" or do not pass the parameter to autoecho to the main console. Can be a string name of the console, or a Geyser MiniConsole
 function demonnic.TableMaker:setAutoEchoConsole(console)
   local funcName = "demonnic.TableMaker:setAutoEchoConsole(console)"
   if console == nil then 
@@ -397,6 +417,7 @@ function demonnic.TableMaker:setAutoEchoConsole(console)
   self.autoEchoConsole = console
 end
 
+--- Assemble the table. If autoEcho is enabled/set to true, will automatically echo. Otherwise, returns the formatted string to echo the table
 function demonnic.TableMaker:assemble()
   if self.allowPopups and self.autoEcho then
     self:popupAssemble()
@@ -448,7 +469,8 @@ function demonnic.TableMaker:textAssemble()
   return sheet
 end
 
-
+--- Creates and returns a new TableMaker. See https://github.com/demonnic/fText/wiki/TableMaker for valid entries to the options table.
+--@tparam table options table of options for the TableMaker object
 function demonnic.TableMaker:new(options)
   local funcName = "emonnic.TableMaker:new(options)"
   local me = {}
