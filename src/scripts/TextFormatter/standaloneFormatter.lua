@@ -18,7 +18,7 @@ function demonnic:wordWrap(str, limit, indent, indent1)
 end
 
 function demonnic:fText(str, opts)
-  local options = demonnic:fixFormatOptions(str, opts)  
+  local options = demonnic:fixFormatOptions(str, opts)
   if options.wrap and (options.strLen > options.effWidth) then
     local wrapped = demonnic:wordWrap(str, options.effWidth)
     local lines = wrapped:split("\n")
@@ -41,8 +41,8 @@ function demonnic:fixFormatOptions(str, opts)
   local col = {"c", "color", "colour", "col", "name"}
   if opts == nil then opts = {} end -- don't overwrite options if they passed them
   --but if they passed something other than a table as the options than oopsie!
-  if type(opts) ~= "table" then 
-    error("Improper argument: options expected to be passed as table") 
+  if type(opts) ~= "table" then
+    error("Improper argument: options expected to be passed as table")
   end
   --now we make a copy of the table, so we don't edit the original during all this
   local options = table.deepcopy(opts)
@@ -85,20 +85,20 @@ function demonnic:fixFormatOptions(str, opts)
   options.strippedString = string.gsub(tostring(str), options.colorPattern, "")
   options.strLen = string.len(options.strippedString)
   options.leftCap = options.cap
-	options.rightCap = options.cap
-  options.leftPadLen = math.floor((options.width - options.strLen)/2,1) - 1
-  options.rightPadLen = options.leftPadLen + ((options.width - options.strLen)%2)
-  options.maxPad = 0
+  options.rightCap = options.cap
   options.capLen = string.len(options.cap)
   local gapSpaces = 0
   if not options.nogap then
-    if options.alignment == "center" then 
-      gapSpaces = 2 
-    else 
-      gapSpaces = 1 
+    if options.alignment == "center" then
+      gapSpaces = 2
+    else
+      gapSpaces = 1
     end
   end
-  options.effWidth = options.width - ((options.capLen * 2) + gapSpaces)
+  options.nontextlength = options.width - options.strLen - gapSpaces
+  options.leftPadLen = math.floor(options.nontextlength / 2)
+  options.rightPadLen = options.nontextlength - options.leftPadLen
+  options.effWidth = options.width - ((options.capLen * gapSpaces) + gapSpaces)
   if options.capLen > options.leftPadLen then
     options.cap = options.cap:sub(1, leftPadLen)
     options.capLen = string.len(options.cap)
@@ -109,13 +109,10 @@ end
 
 function demonnic:fLine(str,opts)
   local options = demonnic:fixFormatOptions(str,opts)
-  local strippedString = options.strippedString
-  local strLen = options.strLen
   local leftCap = options.leftCap
   local rightCap = options.rightCap
   local leftPadLen = options.leftPadLen
   local rightPadLen = options.rightPadLen
-  local maxPad = options.maxPad
   local capLen = options.capLen
 
   if options.alignment == "center" then --we're going to center something
@@ -127,36 +124,36 @@ function demonnic:fLine(str,opts)
       rightCap = string.reverse(rightCap)
     end --otherwise, they'll be the same, so don't do anything
     if not options.nogap then str = string.format(" %s ", str) end
-    
+
   elseif options.alignment == "right" then --we'll right-align the text
     leftPadLen = leftPadLen + rightPadLen
     rightPadLen = 0
     rightCap = ""
     if not options.nogap then str = string.format(" %s", str) end
-    
+
   else --Ok, so if it's not center or right, we assume it's left. We don't do justified. Sorry.
     rightPadLen = rightPadLen + leftPadLen
     leftPadLen = 0
     leftCap = ""
     if not options.nogap then str = string.format("%s ", str) end
-  end--that's it, took care of both left, right, and center formattings, now to output the durn thing. 
+  end--that's it, took care of both left, right, and center formattings, now to output the durn thing.
   local fullLeftCap = string.format("%s%s%s", options.capColor, leftCap, options.colorReset)
   local fullLeftSpacer = string.format("%s%s%s", options.spacerColor, string.rep(options.spacer, (leftPadLen - capLen)), options.colorReset)
   local fullText = string.format("%s%s%s", options.textColor, str, options.colorReset)
   local fullRightSpacer = string.format("%s%s%s", options.spacerColor, string.rep(options.spacer, (rightPadLen - capLen)), options.colorReset)
   local fullRightCap = string.format("%s%s%s", options.capColor, rightCap, options.colorReset)
 
-  if options.inside then 
+  if options.inside then
   -- "endcap===== some text =====endcap"
-  -- "endcap===== some text =====pacdne" 
-  -- "endcap================= some text" 
+  -- "endcap===== some text =====pacdne"
+  -- "endcap================= some text"
   -- "some text =================endcap"
     local finalString = string.format("%s%s%s%s%s", fullLeftCap, fullLeftSpacer, fullText, fullRightSpacer, fullRightCap)
     return finalString
-  else 
-  --"=====endcap some text endcap=====" 
+  else
+  --"=====endcap some text endcap====="
   --"=====endcap some text pacdne====="
-  --"=================endcap some text" 
+  --"=================endcap some text"
   --"some text endcap================="
 
     local finalString = string.format("%s%s%s%s%s", fullLeftSpacer, fullLeftCap, fullText, fullRightCap, fullRightSpacer)
@@ -174,7 +171,7 @@ function demonnic:align(str, opts)
     options.formatType = ""
 		options.wrap = false
   else
-    error("Improper argument: options expected to be passed as table") 
+    error("Improper argument: options expected to be passed as table")
   end
   options = demonnic:fixFormatOptions(str, options)
   return demonnic:fLine(str, options)
@@ -190,7 +187,7 @@ function demonnic:dalign(str, opts)
     options.formatType = "d"
     options.wrap = false
   else
-    error("Improper argument: options expected to be passed as table") 
+    error("Improper argument: options expected to be passed as table")
   end
   options = demonnic:fixFormatOptions(str, options)
   return demonnic:fLine(str, options)
@@ -206,7 +203,7 @@ function demonnic:calign(str, opts)
     options.formatType = "c"
     options.wrap = false
   else
-    error("Improper argument: options expected to be passed as table") 
+    error("Improper argument: options expected to be passed as table")
   end
   options = demonnic:fixFormatOptions(str, options)
   return demonnic:fLine(str, options)
@@ -222,7 +219,7 @@ function demonnic:halign(str, opts)
     options.formatType = "h"
     options.wrap = false
   else
-    error("Improper argument: options expected to be passed as table") 
+    error("Improper argument: options expected to be passed as table")
   end
   options = demonnic:fixFormatOptions(str, options)
   return demonnic:fLine(str, options)
@@ -235,7 +232,7 @@ function demonnic:cfText(str, opts)
     options = table.deepcopy(opts)
     options.formatType = "c"
   else
-    error("Improper argument: options expected to be passed as table") 
+    error("Improper argument: options expected to be passed as table")
   end
   options = demonnic:fixFormatOptions(str, options)
   return demonnic:fText(str, options)
@@ -248,7 +245,7 @@ function demonnic:dfText(str, opts)
     options = table.deepcopy(opts)
     options.formatType = "d"
   else
-    error("Improper argument: options expected to be passed as table") 
+    error("Improper argument: options expected to be passed as table")
   end
   options = demonnic:fixFormatOptions(str, options)
   return demonnic:fText(str, options)
@@ -261,7 +258,7 @@ function demonnic:hfText(str, opts)
     options = table.deepcopy(opts)
     options.formatType = "h"
   else
-    error("Improper argument: options expected to be passed as table") 
+    error("Improper argument: options expected to be passed as table")
   end
   options = demonnic:fixFormatOptions(str, options)
   return demonnic:fText(str, options)
@@ -269,20 +266,20 @@ end
 
 function demonnic:test_ftext()
   local testString = "This is a test of the emergency broadcast system. This is only a test. If this had been a real emergency, we would have given you more sensible information after this. But this was only a test."
-  
+
   local nTable = {width = 40, cap = "(CAP)", inside = true, alignment = 'center'}
   local cTable = table.deepcopy(nTable)
     cTable.formatType="c"
     cTable.capColor = "<red:black>"
     cTable.spacerColor = "<purple:green>"
     cTable.textColor = "<purple:green>"
-  
+
   local dTable = table.deepcopy(nTable)
     dTable.formatType="d"
     dTable.capColor = "<0,0,182>"
     dTable.spacerColor = "<0,182,0>"
     dTable.textColor = "<182,0,0>"
-  
+
   local hTable = table.deepcopy(nTable)
     hTable.formatType="h"
     hTable.capColor = "#FF0000"
