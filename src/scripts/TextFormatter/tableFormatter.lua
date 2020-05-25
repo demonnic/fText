@@ -33,7 +33,7 @@ function demonnic.TableMaker:insert(tbl, pos, item)
   end
 end
 
---- Adds a column definition for the table. 
+--- Adds a column definition for the table.
 --@tparam table options Table of options suitable for a TextFormatter object. See https://github.com/demonnic/fText/wiki/fText
 --@tparam number position The position of the column you're adding, counting from the left. If not provided will add it as the last column
 function demonnic.TableMaker:addColumn(options, position)
@@ -87,7 +87,7 @@ function demonnic.TableMaker:addRow(columnEntries, position)
       if type(entry) == "function" then
         error("demonnic.TableMaker:addRow(columnEntries, position): Argument Error, you provided a function for a columnEntry but it does not return a string. We need a string. It was entry number " .. _ .. "in columnEntries")
       else
-        error("demonnic.TableMaker:addRow(columnEntries, position): Argument error, columnEntries items expected as string, got:" .. type(entry)) 
+        error("demonnic.TableMaker:addRow(columnEntries, position): Argument error, columnEntries items expected as string, got:" .. type(entry))
       end
     end
   end
@@ -170,9 +170,9 @@ function demonnic.TableMaker:setCell(row, column, entry)
   local entryType = type(entry)
   entry = self:checkEntry(entry)
   if entry == 0 then
-    if type(entry) == "function" then 
+    if type(entry) == "function" then
       error(ae .. " entry was provided as a function, but does not return a string. We need a string in the end")
-    else 
+    else
       error("demonnic.TableMaker:setCell(row, column, entry): Argument Error: entry must be a string, or a function which returns a string. You provided a " .. entryType)
     end
   end
@@ -289,7 +289,7 @@ function demonnic.TableMaker:echoRow(rowToScan)
   local ec = self.frameColor .. self.edgeCharacter .. self.colorReset
   local sep = self.separatorColor .. self.separator .. self.colorReset
   if rowEntries < numberOfColumns then
-    entriesNeeded = numberOfColumns - rowEntries
+    local entriesNeeded = numberOfColumns - rowEntries
     for i = 1,entriesNeeded do
       table.insert(row, "")
     end
@@ -298,7 +298,7 @@ function demonnic.TableMaker:echoRow(rowToScan)
     local str = row[index]
     local column = ""
     if type(str) == "function" then str = str() end
-    if type(str) == "table" then 
+    if type(str) == "table" then
       str = str[1]
     end
     column = formatter:format(str)
@@ -319,7 +319,7 @@ function demonnic.TableMaker:echoRow(rowToScan)
     self:echo(ec)
     for index,column in ipairs(columns) do
       local message = column[i]
-      if index ~= 1 then 
+      if index ~= 1 then
         self:echo(sep)
       end
       if type(row[index]) == "string" then
@@ -405,8 +405,8 @@ end
 --@param console The miniconsole to autoecho to. Set to "main" or do not pass the parameter to autoecho to the main console. Can be a string name of the console, or a Geyser MiniConsole
 function demonnic.TableMaker:setAutoEchoConsole(console)
   local funcName = "demonnic.TableMaker:setAutoEchoConsole(console)"
-  if console == nil then 
-    console = "main" 
+  if console == nil then
+    console = "main"
   end
   local consoleType = type(console)
   if consoleType ~= "string" and consoleType ~= "table" then

@@ -1,8 +1,11 @@
 --- fText processing
 -- @module demonnic
 demonnic = demonnic or {}
+local dec = {"d", "decimal", "dec"}
+local hex = {"h", "hexidecimal", "hex"}
+local col = {"c", "color", "colour", "col", "name"}
 
-function demonnic:wordWrap(str, limit, indent, indent1)
+function demonnic.wordWrap(str, limit, indent, indent1)
   -- pulled from http://lua-users.org/wiki/StringRecipes
   indent = indent or ""
   indent1 = indent1 or indent
@@ -17,10 +20,87 @@ function demonnic:wordWrap(str, limit, indent, indent1)
   return indent1..str:gsub("(%s+)()(%S+)()", check)
 end
 
+function demonnic.xwrap(text, limit, type)
+  local colorPattern
+  if table.contains(dec, type) then
+    colorPattern = _Echos.Patterns.Decimal[1]
+  elseif table.contains(hex, type) then
+    colorPattern = _Echos.Patterns.Hex[1]
+  elseif table.contains(col, type) then
+    colorPattern = _Echos.Patterns.Color[1]
+  else
+    return demonnic.wordWrap(text, limit)
+  end
+  local strippedString = rex.gsub(text, colorPattern, "")
+  local strippedLines = demonnic.wordWrap(strippedString, limit):split("\n")
+  local lineIndex = 1
+  local line = ""
+  local strLine = ""
+  local lines = {}
+  local strLines = {}
+  local workingLine = strippedLines[lineIndex]:split("")
+  local workingLineLength = #workingLine
+  local lineColumn = 0
+  for str, color, res in rex.split(text, colorPattern) do
+    if res then
+      if type == "Hex" then
+        color = "#r"
+      elseif type == "Dec" then
+        color = "<r>"
+      elseif type == "Color" then
+        color = "<reset>"
+      end
+    end
+    color = color or ""
+    local strLen = str:len()
+    if lineColumn + strLen <= workingLineLength then
+      strLine = strLine .. str
+      line = line .. str .. color
+      lineColumn = lineColumn + strLen
+    else
+      local neededChars = workingLineLength - lineColumn
+      local take = str:sub(1,neededChars)
+      local leave = str:sub(neededChars+1, -1)
+      strLine = strLine .. take
+      line = line .. take
+      table.insert(lines, line)
+      table.insert(strLines, strLine)
+      line = ""
+      strLine = ""
+      lineIndex = lineIndex + 1
+      workingLine = strippedLines[lineIndex]:split("")
+      workingLineLength = #workingLine
+      lineColumn = 0
+      if leave:sub(1,1) == " " then leave = leave:sub(2,-1) end
+      while leave ~= "" do
+        take = leave:sub(1, workingLineLength)
+        leave = leave:sub(workingLineLength + 1, -1)
+        if leave:sub(1,1) == " " then leave = leave:sub(2,-1) end
+        if take:len() < workingLineLength then
+          lineColumn = take:len()
+          line = line .. take .. color
+          strLine = strLine .. take
+        else
+          lineIndex = lineIndex + 1
+          workingLine = strippedLines[lineIndex]
+          if workingLine then
+            workingLine = strippedLines[lineIndex]:split("")
+            workingLineLength = #workingLine
+          end
+          table.insert(lines, take)
+          table.insert(strLines, take)
+        end
+      end
+    end
+  end
+  if line ~= "" then table.insert(lines, line) end
+  return table.concat(lines, "\n")
+end
+
 function demonnic:fText(str, opts)
   local options = demonnic:fixFormatOptions(str, opts)
   if options.wrap and (options.strLen > options.effWidth) then
-    local wrapped = demonnic:wordWrap(str, options.effWidth)
+    local wrapped = demonnic.xwrap(str, options.effWidth, options.formatType)
     local lines = wrapped:split("\n")
     local formatted = {}
 		options.fixed = false
@@ -36,9 +116,6 @@ end
 function demonnic:fixFormatOptions(str, opts)
   if opts.fixed then return table.deepcopy(opts) end
   --Set up all the things we might call the different echo types
-  local dec = {"d", "decimal", "dec"}
-  local hex = {"h", "hexidecimal", "hex"}
-  local col = {"c", "color", "colour", "col", "name"}
   if opts == nil then opts = {} end -- don't overwrite options if they passed them
   --but if they passed something other than a table as the options than oopsie!
   if type(opts) ~= "table" then
@@ -61,19 +138,19 @@ function demonnic:fixFormatOptions(str, opts)
     options.spacerColor = options.spacerColor or "<255,255,255>"
     options.textColor = options.textColor or "<255,255,255>"
     options.colorReset = "<r>"
-    options.colorPattern = "<%d+,%d+,%d+:?%d*,?%d*,?%d*>"
+    options.colorPattern = _Echos.Patterns.Decimal[1]
   elseif table.contains(hex, options.formatType) then
     options.capColor = options.capColor or "#FFFFFF"
     options.spacerColor = options.spacerColor or "#FFFFFF"
     options.textColor = options.textColor or "#FFFFFF"
     options.colorReset = "#r"
-    options.colorPattern = 'c|%d%d%d%d%d%d'
+    options.colorPattern = _Echos.Patterns.Hex[1]
   elseif table.contains(col, options.formatType) then
     options.capColor = options.capColor or "<white>"
     options.spacerColor = options.spacerColor or "<white>"
     options.textColor = options.textColor or "<white>"
     options.colorReset = "<reset>"
-    options.colorPattern = "<%w*_?%w*:?%w*_?%w*>"
+    options.colorPattern = _Echos.Patterns.Color[1]
   else
     options.capColor = ""
     options.spacerColor = ""
@@ -82,7 +159,7 @@ function demonnic:fixFormatOptions(str, opts)
     options.colorPattern = ""
   end
   options.originalString = str
-  options.strippedString = string.gsub(tostring(str), options.colorPattern, "")
+  options.strippedString = rex.gsub(tostring(str), options.colorPattern, "")
   options.strLen = string.len(options.strippedString)
   options.leftCap = options.cap
   options.rightCap = options.cap
