@@ -220,7 +220,6 @@ function TableMaker:echo(message, echoType, ...)
   end
   local functionName = string.format("%secho%s", fType, echoType)
   local func = _G[functionName]
-  if fType == "" then formatted = false end
   if echoType == "" then
     func(console, message)
   else
